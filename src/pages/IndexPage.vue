@@ -2,8 +2,9 @@
   <q-page class="row q-pt-xl">
     <div class="full-width q-px-xl">
       <div class="q-mb-xl">
-        <q-input v-model="tempData.name" label="姓名" />
-        <q-input v-model="tempData.age" label="年齡" />
+        <q-input v-model="tempData.name" label="姓名" :rules="[validateNotEmpty]"
+        lazy-rules/>
+        <q-input v-model="tempData.age" label="年齡" type="number" :rules="[validateNotEmpty, validatePositiveInteger]" lazy-rules/>
         <q-btn color="primary" class="q-mt-md" @click="addRow">新增</q-btn>
       </div>
 
@@ -123,6 +124,15 @@ const tempData = ref({
   name: '',
   age: '',
 });
+
+const validateNotEmpty = (value: string) => {
+  return value?.trim() ? true : '此欄位不得為空白';
+};
+
+const validatePositiveInteger = (value: number) => {
+  return Number.isInteger(value) && value > 0 ? true : '請輸入正整數';
+};
+
 async function fetchData() {
   try {
     const response = await axios.get('https://dahua.metcfire.com.tw/api/CRUDTest/a');
@@ -134,7 +144,18 @@ async function fetchData() {
 
 async function addRow() {
   try {
-    const response = await axios.post('https://dahua.metcfire.com.tw/api/CRUDTest', tempData.value);
+    const isNameValid = validateNotEmpty(tempData.value.name) === true;
+    const isAgeValid = validateNotEmpty(tempData.value.age) === true && 
+                       validatePositiveInteger(Number(tempData.value.age)) === true;
+
+    if (!isNameValid || !isAgeValid) {
+      console.error('驗證失敗：請確認表單資料');
+      return;
+    }
+    const response = await axios.post('https://dahua.metcfire.com.tw/api/CRUDTest', {
+      name: tempData.value.name,
+      age: Number(tempData.value.age),
+    });
     blockData.value.push(response.data);
     tempData.value = { id: '', name: '', age: null };
   } catch (error) {
