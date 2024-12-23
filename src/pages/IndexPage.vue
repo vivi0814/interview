@@ -4,7 +4,7 @@
       <div class="q-mb-xl">
         <q-input v-model="tempData.name" label="姓名" />
         <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md">新增</q-btn>
+        <q-btn color="primary" class="q-mt-md" @click="addRow">新增</q-btn>
       </div>
 
       <q-table
@@ -123,8 +123,47 @@ const tempData = ref({
   name: '',
   age: '',
 });
+async function fetchData() {
+  try {
+    const response = await axios.get('https://dahua.metcfire.com.tw/api/CRUDTest/a');
+    blockData.value = response.data || [];
+  } catch (error) {
+    console.error('查詢資料失敗：', error);
+  }
+}
+
+async function addRow() {
+  try {
+    const response = await axios.post('https://dahua.metcfire.com.tw/api/CRUDTest', tempData.value);
+    blockData.value.push(response.data);
+    tempData.value = { id: '', name: '', age: null };
+  } catch (error) {
+    console.error('新增資料失敗：', error);
+  }
+}
+async function editRow(data) {
+  try {
+    await axios.patch(`https://dahua.metcfire.com.tw/api/CRUDTest`, data);
+    
+  } catch (error) {
+    console.error('修改資料失敗：', error);
+  }
+}
+
+async function deleteRow(id) {
+  try {
+    await axios.delete(`https://dahua.metcfire.com.tw/api/CRUDTest/${id}`);
+  } catch (error) {
+    console.error('刪除資料失敗：', error);
+  }
+}
+
 function handleClickOption(btn, data) {
-  // ...
+  if (btn.status === 'edit') {
+    tempData.value = { ...data };
+  } else if (btn.status === 'delete') {
+    deleteRow(data.id); 
+  }
 }
 </script>
 
